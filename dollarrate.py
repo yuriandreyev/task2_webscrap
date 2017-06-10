@@ -31,6 +31,23 @@ def read_site(url):
     return str(text)
 
 
+def timer(func):
+    '''Function returns result of some function and a time wasted for calculating the result'''
+    def time_res(*args):
+        repeat = 20  # How many times best time will be calculated to achieve more accuracy
+        best_time = 1000
+        for i in range(repeat):
+            start_time = time.clock()
+            for x in range(500):  # How many times function will be executed to achieve more accuracy
+                result = func(*args)
+            wasted_time = time.clock() - start_time
+            if wasted_time < best_time:
+                best_time = wasted_time
+        return result, best_time
+    return time_res
+
+
+@timer
 def parsing_dollar_re(text, url):
     '''Function returns dollar's rate from text using regular expression.'''
     
@@ -40,6 +57,7 @@ def parsing_dollar_re(text, url):
     return dollar_rate[0]
 
 
+@timer
 def parsing_dollar_lxml(html_text, url):
     '''Function parses dollar's rate in html code using lxml'''
 
@@ -47,21 +65,6 @@ def parsing_dollar_lxml(html_text, url):
     node = tree.xpath(patterns_lxml[url])[0]
     result = node.xpath('./text()')[-1]
     return result
-
-
-def timer(func):
-    '''Function returns result of some function and a time wasted for calculating the result'''
-
-    repeat = 20  # How many times best time will be calculated to achieve more accuracy
-    best_time = 1000
-    for i in range(repeat):
-        start_time = time.clock()
-        for x in range(2000):  # How many times function will be executed to achieve more accuracy
-            result = func
-        wasted_time = time.clock() - start_time
-        if wasted_time < best_time:
-            best_time = wasted_time
-    return result, best_time
 
 
 def output_results(*args):
@@ -73,12 +76,12 @@ def output_results(*args):
         print('-'*50)
         print('{url}'.format(url=url))
         if url in patterns_re:
-            rate, best_time = timer(parsing_dollar_re(html_text, url))
+            rate, best_time = parsing_dollar_re(html_text, url)
             print('{library}\t{rate} rubles, {time: 50.50f}'.format(library='re', rate=rate, time=best_time))
         else:
             print('There is no pattern for parsing %s using regular expressions' % url)
         if url in patterns_lxml:
-            rate, best_time = timer(parsing_dollar_lxml(html_text, url))
+            rate, best_time = parsing_dollar_lxml(html_text, url)
             print('{library}\t{rate} rubles, {time: 50.50f}'.format(library='lxml', rate=rate, time=best_time))
         else:
             print('There is no pattern for parsing %s using XPATH and lxml' % url)
